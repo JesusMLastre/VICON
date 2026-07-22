@@ -17,7 +17,8 @@ entity TOP_FT245_Test is
         FT245_TXEn  : in  STD_LOGIC;
         FT245_WRn   : out STD_LOGIC;
         FT245_RDn   : out STD_LOGIC;
-        LED         : out STD_LOGIC_VECTOR(15 downto 0)
+        LED         : out STD_LOGIC_VECTOR(15 downto 0);
+        SW          : in  STD_LOGIC_VECTOR(15 downto 0)
     );
 end TOP_FT245_Test;
 
@@ -71,7 +72,7 @@ begin
     -- Conexi?n del contador al bus de entrada de datos
     user_din <= std_logic_vector(counter);
     -- Forzamos la habilitaci?n de escritura SIEMPRE a '1' para el modo r?faga continuo
-    user_wren <= '1';
+    user_wren <= SW(0);
     FT245_WRn <= internal_WRn;
     FT245_D <= internal_DATA;
     -- Mantenemos la lectura desactivada
