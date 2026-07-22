@@ -1,3 +1,18 @@
+# Vivado temporary and build directories
 project_1/
+*.cache/
+*.hw/
+*.ip_user_files/
+*.runs/
+*.sim/
+*.xpr
+.Xil/
+
+# Logs y volcados de memoria
 *.dmp
 *.log
+hs_err_pid*
+
+# Archivos de sistema operativo
+.DS_Store
+Thumbs.db
