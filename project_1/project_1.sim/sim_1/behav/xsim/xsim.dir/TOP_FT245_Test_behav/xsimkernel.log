@@ -1,7 +1,4 @@
-Running: xsim.dir/TOP_FT245_Test_behav/xsimk.exe -simmode gui -wdb TOP_FT245_Test_behav.wdb -simrunnum 0 -socket 55772
+Running: xsim.dir/TOP_FT245_Test_behav/xsimk.exe -simmode gui -wdb TOP_FT245_Test_behav.wdb -simrunnum 0 -socket 52630
 Design successfully loaded
-Design Loading Memory Usage: 8048 KB (Peak: 8048 KB)
+Design Loading Memory Usage: 8708 KB (Peak: 8708 KB)
 Design Loading CPU Usage: 0 ms
-Simulation completed
-Simulation Memory Usage: 8972 KB (Peak: 8972 KB)
-Simulation CPU Usage: 31 ms

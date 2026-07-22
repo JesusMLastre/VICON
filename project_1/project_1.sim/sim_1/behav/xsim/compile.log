@@ -1,2 +1,4 @@
+INFO: [VRFC 10-163] Analyzing VHDL file "C:/Users/jesus/Vivado_projects/VICON/FT245_IF.vhd" into library xil_defaultlib
+INFO: [VRFC 10-3107] analyzing entity 'FT245_IF'
 INFO: [VRFC 10-163] Analyzing VHDL file "C:/Users/jesus/Vivado_projects/VICON/TOP.vhd" into library xil_defaultlib
 INFO: [VRFC 10-3107] analyzing entity 'TOP_FT245_Test'
