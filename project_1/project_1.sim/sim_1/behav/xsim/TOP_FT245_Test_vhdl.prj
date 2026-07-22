@@ -1,0 +1,7 @@
+# compile vhdl design source files
+vhdl xil_defaultlib  \
+"../../../../../FT245_IF.vhd" \
+"../../../../../TOP.vhd" \
+
+# Do not sort compile order
+nosort
