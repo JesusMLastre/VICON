@@ -1,1 +1,0 @@
--wto "460d23225a8c4c27b1189039f31bf2ce" --incr --debug "typical" --relax --mt "2" -L "xil_defaultlib" -L "secureip" --snapshot "TOP_FT245_Test_behav" "xil_defaultlib.TOP_FT245_Test" -log "elaborate.log" 
