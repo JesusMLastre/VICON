@@ -29,6 +29,7 @@ add_force clk {1 0ns} {0 5ns} -repeat_every 10ns
 add_force reset 1
 # El chip arranca indicando que NO está listo para recibir
 add_force FT245_TXEn 1
+add_force user_wren 1
 run 15ns
 
 # ==============================================================================
@@ -47,6 +48,8 @@ run 40ns
 # t = 65 ns (bajada): La FPGA acaba de poner WRn a '0' en t = 60 ns.
 # Simulamos el tiempo de reacción T6 del esclavo (aprox 5 ns) subiendo TXEn.
 add_force FT245_TXEn 1
+
+add_force user_wren 0
 #run 90ns
 run 50ns
 # ==============================================================================
