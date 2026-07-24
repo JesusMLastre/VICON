@@ -113,3 +113,36 @@ set_property PACKAGE_PIN T1 [get_ports {SW[14]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {SW[14]}]
 set_property PACKAGE_PIN R2 [get_ports {SW[15]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {SW[15]}]
+
+## --- DISPLAY 7 SEGMENTOS (C?TODOS) ---
+## Controla los segmentos individuales (A, B, C, D, E, F, G y punto decimal) del display.
+## Al ser c?todo com?n, un '0' l?gico enciende el segmento.
+
+set_property PACKAGE_PIN W7 [get_ports {CAT[0]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {CAT[0]}]
+set_property PACKAGE_PIN W6 [get_ports {CAT[1]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {CAT[1]}]
+set_property PACKAGE_PIN U8 [get_ports {CAT[2]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {CAT[2]}]
+set_property PACKAGE_PIN V8 [get_ports {CAT[3]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {CAT[3]}]
+set_property PACKAGE_PIN U5 [get_ports {CAT[4]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {CAT[4]}]
+set_property PACKAGE_PIN V5 [get_ports {CAT[5]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {CAT[5]}]
+set_property PACKAGE_PIN U7 [get_ports {CAT[6]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {CAT[6]}]
+set_property PACKAGE_PIN V7 [get_ports {CAT[7]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {CAT[7]}]
+
+## --- DISPLAY 7 SEGMENTOS (?NODOS) ---
+## Selecciona cu?l de los 4 d?gitos del display est? activo.
+
+set_property PACKAGE_PIN U2 [get_ports {AN[0]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {AN[0]}]
+set_property PACKAGE_PIN U4 [get_ports {AN[1]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {AN[1]}]
+set_property PACKAGE_PIN V4 [get_ports {AN[2]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {AN[2]}]
+set_property PACKAGE_PIN W4 [get_ports {AN[3]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {AN[3]}]
