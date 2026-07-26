@@ -17,6 +17,7 @@ entity TOP_FT245_Test is
         FT245_TXEn  : in  STD_LOGIC;
         FT245_WRn   : out STD_LOGIC;
         FT245_RDn   : out STD_LOGIC;
+        SIWU        : out STD_LOGIC;
         
         -- Periféricos de la placa Basys 3
         LED         : out STD_LOGIC_VECTOR(15 downto 0);
@@ -185,11 +186,13 @@ begin
     FT245_WRn <= internal_WRn;
     FT245_D   <= internal_DATA;
     FT245_RDn <= '1'; 
+    SIWU      <= '1';
     
     LED(0)    <= FT245_TXEn;
     LED(1)    <= user_wren;
     LED(2)    <= reset;
     LED(3)    <= internal_WRn;
+    LED(4)    <= user_ready;
     LED(15)   <= internal_DATA(7);
 
 end Behavioral;

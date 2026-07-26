@@ -49,7 +49,7 @@ run 40ns
 # Simulamos el tiempo de reacción T6 del esclavo (aprox 5 ns) subiendo TXEn.
 add_force FT245_TXEn 1
 
-add_force user_wren 0
+#add_force user_wren 0
 #run 90ns
 run 50ns
 # ==============================================================================

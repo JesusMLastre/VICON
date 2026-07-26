@@ -38,6 +38,10 @@ set_property IOSTANDARD LVCMOS33 [get_ports FT245_WRn]
 set_property PACKAGE_PIN M18 [get_ports FT245_RDn]
 set_property IOSTANDARD LVCMOS33 [get_ports FT245_RDn]
 
+# C4 - SIWU (Send Inmediate/ Wake Up) (Salida)
+set_property PACKAGE_PIN N17 [get_ports SIWU]
+set_property IOSTANDARD LVCMOS33 [get_ports SIWU]
+
 # Nota: RXF (C0, pin K17) y RD (C2, pin M18) no se declaran aún porque
 # el módulo actual FT245_IF solo soporta transmisión hacia el PC.
 
