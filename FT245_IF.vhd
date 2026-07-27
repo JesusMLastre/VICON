@@ -1,5 +1,5 @@
 ----------------------------------------------------------------------------------
--- Autor: Francisco Jesús Martín Lastre
+-- Autor: Francisco Jesï¿½s Martï¿½n Lastre
 -- DNI 76751046T
 ----------------------------------------------------------------------------------
 
@@ -9,7 +9,7 @@ use IEEE.NUMERIC_STD.ALL;
 
 entity FT245_IF is
     Generic (
-        -- Número de FFs del sincronizador
+        -- Nï¿½mero de FFs del sincronizador
         N: NATURAL := 2
     );
     Port ( 
@@ -33,7 +33,7 @@ architecture Behavioral of FT245_IF is
     signal TXEn_sync:    std_logic;
 
     -- Estados de FSM
-    type states is (idle, wait_for_TXE, output_data, write_1, write_2, write_3, write_4, rec_1, rec_2, rec_3, rec_4, rec_5);
+    type states is (idle, wait_for_TXE, output_data, write_1, write_2, write_3, write_4);
     signal state_reg, state_next: states;
 
     -- Salidas de FSM
@@ -74,7 +74,7 @@ begin
     ------------------------------------------------------------------
 
     ------------------------------------------------------------------
-    -- LÓGICA DE ESTADO SIGUIENTE ---------------------------------------
+    -- Lï¿½GICA DE ESTADO SIGUIENTE ---------------------------------------
     COMB: process (state_reg, wr_en, TXEn_sync, DIN, ready_reg, WRn_reg, DATA_reg)
     begin
         -- Asignaciones por defecto (para prevenir latches)
@@ -115,25 +115,8 @@ begin
                 state_next <= write_4;
             
             -- Estado write_4
-            when write_4 =>
+            when write_4 =>                
                 WRn_next   <= '1';
-                state_next <= rec_1;   -- Iniciamos el tiempo de recuperación (Recovery)
-                
-            -- Estados de recuperación (5 ciclos = 50 ns a 100 MHz)
-            when rec_1 =>
-                state_next <= rec_2;
-                
-            when rec_2 =>
-                state_next <= rec_3;
-                
-            when rec_3 =>
-                state_next <= rec_4;
-                
-            when rec_4 =>
-                state_next <= rec_5;
-                
-            -- Fin del tiempo de recuperación
-            when rec_5 =>
                 if wr_en = '0' then
                     state_next <= idle;
                     ready_next <= '1';
