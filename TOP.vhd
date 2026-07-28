@@ -18,6 +18,13 @@ entity TOP_FT245_Test is
         FT245_WRn   : out STD_LOGIC;
         FT245_RDn   : out STD_LOGIC;
         SIWU        : out STD_LOGIC;
+
+        -- NUEVOS PUERTOS: Cámara MT9V111
+        cam_xclk    : out STD_LOGIC;                     -- Reloj maestro de ~25 MHz hacia la cámara
+        cam_pclk    : in  STD_LOGIC;                     -- Reloj de píxel desde la cámara
+        cam_vsync   : in  STD_LOGIC;                     -- Sincronismo de fotograma (Frame Valid)
+        cam_href    : in  STD_LOGIC;                     -- Sincronismo de línea (Line Valid)
+        cam_data    : in  STD_LOGIC_VECTOR(7 downto 0);  -- Datos del píxel de la cámara
         
         -- Periféricos de la placa Basys 3
         LED         : out STD_LOGIC_VECTOR(15 downto 0);
@@ -28,6 +35,18 @@ entity TOP_FT245_Test is
 end TOP_FT245_Test;
 
 architecture Behavioral of TOP_FT245_Test is
+
+    -- ==========================================
+    -- DECLARACIÓN DEL GENERADOR DE RELOJ (MMCM)
+    -- ==========================================
+    component clk_wiz_0
+    port (
+        clk_in1  : in  std_logic;
+        clk_out1 : out std_logic;
+        reset    : in  std_logic;
+        locked   : out std_logic
+    );
+    end component;
 
     -- Señales internas para interactuar con el FT245_IF
     signal user_ready : std_logic;
@@ -52,6 +71,16 @@ architecture Behavioral of TOP_FT245_Test is
     signal hex_val      : unsigned(3 downto 0);
 
 begin
+    -- ==========================================
+    -- INSTANCIA DEL RELOJ DE LA CÁMARA (25 MHz)
+    -- ==========================================
+    Inst_clk_wiz_camera: clk_wiz_0
+    port map (
+        clk_in1  => clk,       -- Reloj base de 100 MHz de la placa
+        clk_out1 => cam_xclk,  -- Salida hacia el pin XCLK de la cámara
+        reset    => reset,     -- Conectado al botón central BTNC
+        locked   => open
+    );
 
     -- Instancia del módulo de comunicación
     FT245_inst: entity work.FT245_IF
