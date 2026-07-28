@@ -16,3 +16,6 @@ hs_err_pid*
 # Archivos de sistema operativo
 .DS_Store
 Thumbs.db
+
+# Archivos temporales
+FT245_original.vhd
