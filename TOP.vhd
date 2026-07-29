@@ -69,6 +69,31 @@ architecture Behavioral of TOP_FT245_Test is
     signal refresh_cnt  : unsigned(19 downto 0) := (others => '0');
     signal active_digit : std_logic_vector(1 downto 0);
     signal hex_val      : unsigned(3 downto 0);
+    
+    -- ==========================================
+    -- DECLARACIÓN DE LA FIFO ASÍNCRONA
+    -- ==========================================
+    component fifo_cam
+        PORT (
+            rst    : IN STD_LOGIC;
+            wr_clk : IN STD_LOGIC;
+            rd_clk : IN STD_LOGIC;
+            din    : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
+            wr_en  : IN STD_LOGIC;
+            rd_en  : IN STD_LOGIC;
+            dout   : OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
+            full   : OUT STD_LOGIC;
+            empty  : OUT STD_LOGIC
+        );
+    end component;
+
+    -- Señales de la FIFO
+    signal fifo_din   : std_logic_vector(7 downto 0);
+    signal fifo_wr_en : std_logic;
+    signal fifo_rd_en : std_logic;
+    signal fifo_dout  : std_logic_vector(7 downto 0);
+    signal fifo_full  : std_logic;
+    signal fifo_empty : std_logic;
 
 begin
     -- ==========================================
@@ -125,16 +150,72 @@ begin
     -- ==========================================
     -- MÁQUINA GENERADORA DE DATOS DE PRUEBA
     -- ==========================================
+    -- process(clk, reset)
+    -- begin
+    --     if reset = '1' then
+    --         counter <= (others => '0');
+    --         wr_prev <= '1';
+    --     elsif rising_edge(clk) then
+    --         if wr_prev = '0' and internal_WRn = '1' then
+    --             counter <= counter + 1;
+    --         end if;
+    --         wr_prev <= internal_WRn;
+    --     end if;
+    -- end process;
+
+    -- ==========================================
+    -- INSTANCIA DE LA FIFO DE PÍXELES
+    -- ==========================================
+    Inst_fifo_cam: fifo_cam
+      PORT MAP (
+        rst    => reset,
+        wr_clk => cam_pclk,   -- Reloj de escritura: el que envía la cámara
+        rd_clk => clk,        -- Reloj de lectura: 100 MHz de la FPGA
+        din    => fifo_din,
+        wr_en  => fifo_wr_en,
+        rd_en  => fifo_rd_en,
+        dout   => fifo_dout,
+        full   => fifo_full,
+        empty  => fifo_empty
+      );
+
+    -- ==========================================
+    -- 1. CAPTURA DE LA CÁMARA (Dominio cam_pclk)
+    -- ==========================================
+    process(cam_pclk, reset)
+    begin
+        if reset = '1' then
+            fifo_wr_en <= '0';
+            fifo_din   <= (others => '0');
+        elsif rising_edge(cam_pclk) then
+            -- Solo guardamos el dato si el fotograma y la línea son válidos
+            if cam_vsync = '1' and cam_href = '1' and fifo_full = '0' then
+                fifo_wr_en <= '1';
+                fifo_din   <= cam_data;
+            else
+                fifo_wr_en <= '0';
+            end if;
+        end if;
+    end process;
+
+    -- ==========================================
+    -- 2. ENVÍO HACIA EL PC (Dominio clk 100 MHz)
+    -- ==========================================
     process(clk, reset)
     begin
         if reset = '1' then
-            counter <= (others => '0');
-            wr_prev <= '1';
+            user_wren  <= '0';
+            fifo_rd_en <= '0';
         elsif rising_edge(clk) then
-            if wr_prev = '0' and internal_WRn = '1' then
-                counter <= counter + 1;
+            -- Valores por defecto para generar pulsos de un ciclo de reloj
+            fifo_rd_en <= '0';
+            user_wren  <= '0';
+
+            -- Si hay píxeles en la FIFO, el switch está activado (antirrebote), y el módulo USB está listo
+            if fifo_empty = '0' and user_ready = '1' and sw0_stable = '1' then
+                fifo_rd_en <= '1';    -- Extraemos el píxel de la FIFO
+                user_wren  <= '1';    -- Le decimos al FT245 que lo envíe
             end if;
-            wr_prev <= internal_WRn;
         end if;
     end process;
 
@@ -209,7 +290,8 @@ begin
     -- ==========================================
     -- ASIGNACIÓN DE SALIDAS DEL SISTEMA
     -- ==========================================
-    user_din  <= std_logic_vector(counter);
+    --user_din  <= std_logic_vector(counter);
+    user_din  <= fifo_dout;
     user_wren <= sw0_stable;
     
     FT245_WRn <= internal_WRn;
