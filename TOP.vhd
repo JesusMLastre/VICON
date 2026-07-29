@@ -1,5 +1,5 @@
 ----------------------------------------------------------------------------------
--- Módulo TOP para prueba de comunicación FT245 (Con Antirrebote y Display 7 Seg)
+-- Módulo TOP para proyecto VICON (Captura MT9V111 + UM232H)
 -- Autor: Francisco Jesús Martín Lastre
 ----------------------------------------------------------------------------------
 
@@ -19,7 +19,7 @@ entity TOP_FT245_Test is
         FT245_RDn   : out STD_LOGIC;
         SIWU        : out STD_LOGIC;
 
-        -- NUEVOS PUERTOS: Cámara MT9V111
+        -- Cámara MT9V111
         cam_xclk    : out STD_LOGIC;                     -- Reloj maestro de ~25 MHz hacia la cámara
         cam_pclk    : in  STD_LOGIC;                     -- Reloj de píxel desde la cámara
         cam_vsync   : in  STD_LOGIC;                     -- Sincronismo de fotograma (Frame Valid)
@@ -49,14 +49,10 @@ architecture Behavioral of TOP_FT245_Test is
     end component;
 
     -- Señales internas para interactuar con el FT245_IF
-    signal user_ready : std_logic;
-    signal user_wren  : std_logic;
-    signal user_din   : std_logic_vector(7 downto 0);
-    
-    -- Contador para generar datos de prueba
-    signal counter    : unsigned(7 downto 0);
-    signal wr_prev    : std_logic := '1';
-    signal internal_WRn: std_logic;
+    signal user_ready   : std_logic;
+    signal user_wren    : std_logic;
+    signal user_din     : std_logic_vector(7 downto 0);
+    signal internal_WRn : std_logic;
     signal internal_DATA: std_logic_vector(7 downto 0);
 
     -- Señales para el Antirrebote (Debouncer)
@@ -148,22 +144,6 @@ begin
     end process;
 
     -- ==========================================
-    -- MÁQUINA GENERADORA DE DATOS DE PRUEBA
-    -- ==========================================
-    -- process(clk, reset)
-    -- begin
-    --     if reset = '1' then
-    --         counter <= (others => '0');
-    --         wr_prev <= '1';
-    --     elsif rising_edge(clk) then
-    --         if wr_prev = '0' and internal_WRn = '1' then
-    --             counter <= counter + 1;
-    --         end if;
-    --         wr_prev <= internal_WRn;
-    --     end if;
-    -- end process;
-
-    -- ==========================================
     -- INSTANCIA DE LA FIFO DE PÍXELES
     -- ==========================================
     Inst_fifo_cam: fifo_cam
@@ -236,8 +216,8 @@ begin
     -- Usamos los bits superiores para seleccionar qué display está encendido
     active_digit <= std_logic_vector(refresh_cnt(19 downto 18));
     
-    -- 2. Selección del ánodo y del medio byte (nibble) del contador
-    process(active_digit, counter)
+    -- 2. Selección del ánodo y del medio byte (nibble) del valor extraído de la FIFO
+    process(active_digit, fifo_dout)
     begin
         -- Por defecto: displays apagados y valor cero
         AN <= "1111";
@@ -246,10 +226,10 @@ begin
         case active_digit is
             when "00" => 
                 AN <= "1110"; -- Activa el display 0 (el de más a la derecha)
-                hex_val <= counter(3 downto 0); -- Parte baja del contador
+                hex_val <= unsigned(fifo_dout(3 downto 0)); -- Parte baja del píxel
             when "01" => 
                 AN <= "1101"; -- Activa el display 1
-                hex_val <= counter(7 downto 4); -- Parte alta del contador
+                hex_val <= unsigned(fifo_dout(7 downto 4)); -- Parte alta del píxel
             when others => 
                 AN <= "1111"; -- Los displays 2 y 3 permanecen apagados ("XX")
                 hex_val <= "0000";
@@ -290,9 +270,8 @@ begin
     -- ==========================================
     -- ASIGNACIÓN DE SALIDAS DEL SISTEMA
     -- ==========================================
-    --user_din  <= std_logic_vector(counter);
+    -- Enviamos directamente el bus de salida de la FIFO a la interfaz FT245
     user_din  <= fifo_dout;
-    user_wren <= sw0_stable;
     
     FT245_WRn <= internal_WRn;
     FT245_D   <= internal_DATA;
