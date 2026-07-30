@@ -25,6 +25,7 @@ entity TOP_FT245_Test is
         cam_vsync   : in  STD_LOGIC;                     -- Sincronismo de fotograma (Frame Valid)
         cam_href    : in  STD_LOGIC;                     -- Sincronismo de línea (Line Valid)
         cam_data    : in  STD_LOGIC_VECTOR(7 downto 0);  -- Datos del píxel de la cámara
+        cam_rst_n   : out STD_LOGIC;                     -- Reset de la cámara   
         
         -- Periféricos de la placa Basys 3
         LED         : out STD_LOGIC_VECTOR(15 downto 0);
@@ -92,6 +93,8 @@ architecture Behavioral of TOP_FT245_Test is
     signal fifo_empty : std_logic;
 
 begin
+    -- Reset activo a nivel bajo
+    cam_rst_n <= not reset;
     -- ==========================================
     -- INSTANCIA DEL RELOJ DE LA CÁMARA (25 MHz)
     -- ==========================================
@@ -135,7 +138,7 @@ begin
             else
                 debounce_cnt <= debounce_cnt + 1;
                 -- Estabilidad de 20 ms a 100 MHz
-                if debounce_cnt = 2000000 then
+                if debounce_cnt = 20 then
                     sw0_stable <= sw0_sync_2;
                     debounce_cnt <= (others => '0');
                 end if;
@@ -169,6 +172,7 @@ begin
             fifo_din   <= (others => '0');
         elsif rising_edge(cam_pclk) then
             -- Solo guardamos el dato si el fotograma y la línea son válidos
+            --if cam_vsync = '1' and cam_href = '1' and fifo_full = '0' then
             if cam_vsync = '1' and cam_href = '1' and fifo_full = '0' then
                 fifo_wr_en <= '1';
                 fifo_din   <= cam_data;
@@ -281,8 +285,10 @@ begin
     LED(0)    <= FT245_TXEn;
     LED(1)    <= user_wren;
     LED(2)    <= reset;
-    LED(3)    <= internal_WRn;
-    LED(4)    <= user_ready;
-    LED(15)   <= internal_DATA(7);
+    LED(3)    <= fifo_empty;  -- Encendido = FIFO VACÍA (No entran píxeles)
+    LED(4)    <= fifo_full;   -- Encendido = FIFO LLENA
+    LED(5)    <= user_ready;  -- Encendido = Interfaz FT245 lista
+    LED(6)    <= cam_vsync;   -- Encendido = Sincronismo de fotograma activo
+    LED(7)    <= cam_href;    -- Encendido = Sincronismo de línea activo
 
 end Behavioral;
