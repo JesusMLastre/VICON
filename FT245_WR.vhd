@@ -1,15 +1,15 @@
-----------------------------------------------------------------------------------
--- Autor: Francisco Jes�s Mart�n Lastre
+------------------------------------------------------------------
+-- Autor: Francisco Jesus Martin Lastre
 -- DNI 76751046T
-----------------------------------------------------------------------------------
+------------------------------------------------------------------
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
-entity FT245_IF is
+entity FT245_WR is
     Generic (
-        -- N�mero de FFs del sincronizador
+        -- Numero de FFs del sincronizador
         N: NATURAL := 2
     );
     Port ( 
@@ -24,9 +24,9 @@ entity FT245_IF is
         WRn:    out STD_LOGIC;
         DATA:   out STD_LOGIC_VECTOR(7 downto 0)
     );
-end FT245_IF;
+end FT245_WR;
 
-architecture Behavioral of FT245_IF is
+architecture Behavioral of FT245_WR is
     -- Sincronizador --------------------------
     -- Modelamos los dos FFs que conforman el sincronizador
     signal synchronizer: STD_LOGIC_VECTOR (N-1 downto 0);
@@ -74,7 +74,7 @@ begin
     ------------------------------------------------------------------
 
     ------------------------------------------------------------------
-    -- L�GICA DE ESTADO SIGUIENTE ---------------------------------------
+    -- LOGICA DE ESTADO SIGUIENTE ---------------------------------------
     COMB: process (state_reg, wr_en, TXEn_sync, DIN, ready_reg, WRn_reg, DATA_reg)
     begin
         -- Asignaciones por defecto (para prevenir latches)
