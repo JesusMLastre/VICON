@@ -1,5 +1,5 @@
 ------------------------------------------------------------------
--- Modulo: FT245_RX (Recepcion de Comandos)
+-- Modulo: FT245_RD (Recepcion de Comandos)
 -- Descripcion: Maquina de estados analoga a FT245_WR para lectura
 ------------------------------------------------------------------
 
@@ -7,7 +7,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
-entity FT245_RX is
+entity FT245_RD is
     Generic (
         -- Numero de FFs del sincronizador
         N: NATURAL := 2
@@ -23,9 +23,9 @@ entity FT245_RX is
         RDn       : out STD_LOGIC;
         DATA      : in STD_LOGIC_VECTOR(7 downto 0)
     );
-end FT245_RX;
+end FT245_RD;
 
-architecture Behavioral of FT245_RX is
+architecture Behavioral of FT245_RD is
     ------------------------------------------------------------------
     -- SINCRONIZADOR 
     ------------------------------------------------------------------
@@ -53,7 +53,7 @@ begin
             synchronizer <= RXFn & synchronizer(N-1 downto 1);
         end if;
     end process SYNC;
-    -- Usamos la señal sincronizada y segura para nuestra FSM
+    -- Usamos la seï¿½al sincronizada y segura para nuestra FSM
     RXFn_sync <= synchronizer(0); 
     ------------------------------------------------------------------
 

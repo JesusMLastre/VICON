@@ -135,7 +135,7 @@ begin
     -- ==========================================
     -- INSTANCIA DEL FT245 DE LECTURA
     -- ==========================================
-    FT245_RX_inst: entity work.FT245_RX
+    FT245_RX_inst: entity work.FT245_RD
         port map (
             clk       => clk,
             reset     => reset,
