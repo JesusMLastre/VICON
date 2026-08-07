@@ -150,17 +150,17 @@ begin
     -- INSTANCIA DE LA FIFO DE PIXELES
     -- ==========================================
     Inst_fifo_cam: fifo_cam
-        PORT MAP (
-            rst    => reset,
-            wr_clk => cam_pclk,   -- Reloj de escritura: el que envia la camara
-            rd_clk => clk,        -- Reloj de lectura: 100 MHz de la FPGA
-            din    => fifo_din,
-            wr_en  => fifo_wr_en,
-            rd_en  => fifo_rd_en,
-            dout   => fifo_dout,
-            full   => fifo_full,
-            empty  => fifo_empty
-        );
+      PORT MAP (
+        rst    => reset,
+        wr_clk => cam_pclk,   -- Reloj de escritura: el que envia la camara
+        rd_clk => clk,        -- Reloj de lectura: 100 MHz de la FPGA
+        din    => fifo_din,
+        wr_en  => fifo_wr_en,
+        rd_en  => fifo_rd_en,
+        dout   => fifo_dout,
+        full   => fifo_full,
+        empty  => fifo_empty
+      );
 
     -- ==========================================
     -- 1. CAPTURA DE LA CAMARA (Dominio cam_pclk)
