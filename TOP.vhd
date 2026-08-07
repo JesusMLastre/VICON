@@ -190,6 +190,37 @@ begin
       );
 
     -- ==========================================
+    -- DECODIFICADOR DE COMANDOS (Dominio 100 MHz)
+    -- ==========================================
+    process(clk, reset)
+    begin
+        if reset = '1' then
+            req_frame_100 <= '0';
+        elsif rising_edge(clk) then
+            -- Si recibimos el comando 0x01 (Pedir Frame), levantamos la bandera
+            if cmd_valid = '1' and cmd_out = x"01" then
+                req_frame_100 <= '1';
+            -- Aquí añadiremos la condición para bajar la bandera cuando el frame se envíe
+            end if;
+        end if;
+    end process;
+
+    -- ==========================================
+    -- SINCRONIZADOR 2-FF (Cruce a Dominio 25 MHz)
+    -- ==========================================
+    process(cam_pclk, reset)
+    begin
+        if reset = '1' then
+            sync_ff1     <= '0';
+            req_frame_25 <= '0';
+        elsif rising_edge(cam_pclk) then
+            -- Pasamos la señal por dos biestables en cascada para evitar metaestabilidad
+            sync_ff1     <= req_frame_100;
+            req_frame_25 <= sync_ff1;
+        end if;
+    end process;
+
+    -- ==========================================
     -- 1. CAPTURA DE LA CAMARA (Dominio cam_pclk)
     -- ==========================================
     process(cam_pclk, reset)
