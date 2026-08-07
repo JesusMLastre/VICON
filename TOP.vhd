@@ -50,20 +50,30 @@ architecture Behavioral of TOP_FT245_Test is
     );
     end component;
 
-    -- Senales internas para interactuar con el FT245_WR
+    -- Señales internas para interactuar con el FT245_WR
     signal user_ready   : std_logic;
     signal user_wren    : std_logic;
     signal user_din     : std_logic_vector(7 downto 0);
     signal internal_WRn : std_logic;
     signal internal_DATA: std_logic_vector(7 downto 0);
 
-    -- Senales para el Antirrebote (Debouncer)
+    -- Señales internas para interactuar con el FT245_RD
+    signal internal_RDn : std_logic;
+    signal cmd_out      : std_logic_vector(7 downto 0);
+    signal cmd_valid    : std_logic;
+
+    -- Señales para el Antirrebote (Debouncer)
     signal sw0_sync_1   : std_logic := '0';
     signal sw0_sync_2   : std_logic := '0';
     signal sw0_stable   : std_logic := '0';
     signal debounce_cnt : unsigned(20 downto 0) := (others => '0');
 
-    -- Senales para el control del Display de 7 Segmentos
+    -- Señales para el sincronizador 2-FF
+    signal req_frame_100: std_logic := '0';
+    signal sync_ff1     : std_logic := '0';
+    signal req_frame_25 : std_logic := '0';
+
+    -- Señales para el control del Display de 7 Segmentos
     signal refresh_cnt  : unsigned(19 downto 0) := (others => '0');
     signal active_digit : std_logic_vector(1 downto 0);
     signal hex_val      : unsigned(3 downto 0);
@@ -85,7 +95,7 @@ architecture Behavioral of TOP_FT245_Test is
         );
     end component;
 
-    -- Senales de la FIFO
+    -- Señales de la FIFO
     signal fifo_din   : std_logic_vector(7 downto 0);
     signal fifo_wr_en : std_logic;
     signal fifo_rd_en : std_logic;
