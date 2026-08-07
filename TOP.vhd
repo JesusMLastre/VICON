@@ -117,7 +117,9 @@ begin
         locked   => open
     );
 
-    -- Instancia del modulo de comunicacion
+    -- ==========================================
+    -- INSTANCIA DEL FT245 DE ESCRITURA
+    -- ==========================================
     FT245_inst: entity work.FT245_WR
         port map (
             clk     => clk,
@@ -128,6 +130,20 @@ begin
             TXEn    => FT245_TXEn,
             WRn     => internal_WRn,
             DATA    => internal_DATA
+        );
+
+    -- ==========================================
+    -- INSTANCIA DEL FT245 DE LECTURA
+    -- ==========================================
+    FT245_RX_inst: entity work.FT245_RX
+        port map (
+            clk       => clk,
+            reset     => reset,
+            cmd_out   => cmd_out,
+            cmd_valid => cmd_valid,
+            RXFn      => FT245_RXFn,
+            RDn       => internal_RDn,
+            DATA      => FT245_D
         );
 
     -- ==========================================
