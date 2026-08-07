@@ -288,8 +288,8 @@ begin
     user_din  <= fifo_dout;
     
     FT245_WRn <= internal_WRn;
-    FT245_D   <= internal_DATA;
-    FT245_RDn <= '1'; 
+    FT245_D   <= internal_DATA when (internal_RDn = '1') else (others => 'Z');
+    FT245_RDn <= internal_RDn; 
     SIWU      <= '1';
     
     LED(0)    <= FT245_TXEn;
