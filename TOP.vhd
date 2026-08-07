@@ -1,7 +1,7 @@
-----------------------------------------------------------------------------------
--- Módulo TOP para proyecto VICON (Captura MT9V111 + UM232H)
--- Autor: Francisco Jesús Martín Lastre
-----------------------------------------------------------------------------------
+------------------------------------------------------------------
+-- Modulo TOP para proyecto VICON (Captura MT9V111 + UM232H)
+-- Autor: Francisco Jesus Martin Lastre
+------------------------------------------------------------------
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
@@ -12,22 +12,22 @@ entity TOP_FT245_Test is
         clk         : in  STD_LOGIC;
         reset       : in  STD_LOGIC;
         
-        -- Interfaz física con UM232H
+        -- Interfaz fisica con UM232H
         FT245_D     : out STD_LOGIC_VECTOR (7 downto 0);
         FT245_TXEn  : in  STD_LOGIC;
         FT245_WRn   : out STD_LOGIC;
         FT245_RDn   : out STD_LOGIC;
         SIWU        : out STD_LOGIC;
 
-        -- Cámara MT9V111
-        cam_xclk    : out STD_LOGIC;                     -- Reloj maestro de ~25 MHz hacia la cámara
-        cam_pclk    : in  STD_LOGIC;                     -- Reloj de píxel desde la cámara
+        -- Camara MT9V111
+        cam_xclk    : out STD_LOGIC;                     -- Reloj maestro de ~25 MHz hacia la camara
+        cam_pclk    : in  STD_LOGIC;                     -- Reloj de pixel desde la camara
         cam_vsync   : in  STD_LOGIC;                     -- Sincronismo de fotograma (Frame Valid)
-        cam_href    : in  STD_LOGIC;                     -- Sincronismo de línea (Line Valid)
-        cam_data    : in  STD_LOGIC_VECTOR(7 downto 0);  -- Datos del píxel de la cámara
-        cam_rst_n   : out STD_LOGIC;                     -- Reset de la cámara   
+        cam_href    : in  STD_LOGIC;                     -- Sincronismo de linea (Line Valid)
+        cam_data    : in  STD_LOGIC_VECTOR(7 downto 0);  -- Datos del pixel de la camara
+        cam_rst_n   : out STD_LOGIC;                     -- Reset de la camara   
         
-        -- Periféricos de la placa Basys 3
+        -- Perifericos de la placa Basys 3
         LED         : out STD_LOGIC_VECTOR(15 downto 0);
         SW          : in  STD_LOGIC_VECTOR(15 downto 0);
         CAT         : out STD_LOGIC_VECTOR(7 downto 0);
@@ -38,7 +38,7 @@ end TOP_FT245_Test;
 architecture Behavioral of TOP_FT245_Test is
 
     -- ==========================================
-    -- DECLARACIÓN DEL GENERADOR DE RELOJ (MMCM)
+    -- DECLARACION DEL GENERADOR DE RELOJ (MMCM)
     -- ==========================================
     component clk_wiz_0
     port (
@@ -49,26 +49,26 @@ architecture Behavioral of TOP_FT245_Test is
     );
     end component;
 
-    -- Señales internas para interactuar con el FT245_IF
+    -- Senales internas para interactuar con el FT245_WR
     signal user_ready   : std_logic;
     signal user_wren    : std_logic;
     signal user_din     : std_logic_vector(7 downto 0);
     signal internal_WRn : std_logic;
     signal internal_DATA: std_logic_vector(7 downto 0);
 
-    -- Señales para el Antirrebote (Debouncer)
+    -- Senales para el Antirrebote (Debouncer)
     signal sw0_sync_1   : std_logic := '0';
     signal sw0_sync_2   : std_logic := '0';
     signal sw0_stable   : std_logic := '0';
     signal debounce_cnt : unsigned(20 downto 0) := (others => '0');
 
-    -- Señales para el control del Display de 7 Segmentos
+    -- Senales para el control del Display de 7 Segmentos
     signal refresh_cnt  : unsigned(19 downto 0) := (others => '0');
     signal active_digit : std_logic_vector(1 downto 0);
     signal hex_val      : unsigned(3 downto 0);
     
     -- ==========================================
-    -- DECLARACIÓN DE LA FIFO ASÍNCRONA
+    -- DECLARACION DE LA FIFO ASINCRONA
     -- ==========================================
     component fifo_cam
         PORT (
@@ -84,7 +84,7 @@ architecture Behavioral of TOP_FT245_Test is
         );
     end component;
 
-    -- Señales de la FIFO
+    -- Senales de la FIFO
     signal fifo_din   : std_logic_vector(7 downto 0);
     signal fifo_wr_en : std_logic;
     signal fifo_rd_en : std_logic;
@@ -96,18 +96,18 @@ begin
     -- Reset activo a nivel bajo
     cam_rst_n <= not reset;
     -- ==========================================
-    -- INSTANCIA DEL RELOJ DE LA CÁMARA (25 MHz)
+    -- INSTANCIA DEL RELOJ DE LA CAMARA (25 MHz)
     -- ==========================================
     Inst_clk_wiz_camera: clk_wiz_0
     port map (
         clk_in1  => clk,       -- Reloj base de 100 MHz de la placa
-        clk_out1 => cam_xclk,  -- Salida hacia el pin XCLK de la cámara
-        reset    => reset,     -- Conectado al botón central BTNC
+        clk_out1 => cam_xclk,  -- Salida hacia el pin XCLK de la camara
+        reset    => reset,     -- Conectado al boton central BTNC
         locked   => open
     );
 
-    -- Instancia del módulo de comunicación
-    FT245_inst: entity work.FT245_IF
+    -- Instancia del modulo de comunicacion
+    FT245_inst: entity work.FT245_WR
         port map (
             clk     => clk,
             reset   => reset,
@@ -147,12 +147,12 @@ begin
     end process;
 
     -- ==========================================
-    -- INSTANCIA DE LA FIFO DE PÍXELES
+    -- INSTANCIA DE LA FIFO DE PIXELES
     -- ==========================================
     Inst_fifo_cam: fifo_cam
       PORT MAP (
         rst    => reset,
-        wr_clk => cam_pclk,   -- Reloj de escritura: el que envía la cámara
+        wr_clk => cam_pclk,   -- Reloj de escritura: el que envia la camara
         rd_clk => clk,        -- Reloj de lectura: 100 MHz de la FPGA
         din    => fifo_din,
         wr_en  => fifo_wr_en,
@@ -163,7 +163,7 @@ begin
       );
 
     -- ==========================================
-    -- 1. CAPTURA DE LA CÁMARA (Dominio cam_pclk)
+    -- 1. CAPTURA DE LA CAMARA (Dominio cam_pclk)
     -- ==========================================
     process(cam_pclk, reset)
     begin
@@ -171,8 +171,7 @@ begin
             fifo_wr_en <= '0';
             fifo_din   <= (others => '0');
         elsif rising_edge(cam_pclk) then
-            -- Solo guardamos el dato si el fotograma y la línea son válidos
-            --if cam_vsync = '1' and cam_href = '1' and fifo_full = '0' then
+            -- Solo guardamos el dato si el fotograma y la linea son validos
             if cam_vsync = '1' and cam_href = '1' and fifo_full = '0' then
                 fifo_wr_en <= '1';
                 fifo_din   <= cam_data;
@@ -183,7 +182,7 @@ begin
     end process;
 
     -- ==========================================
-    -- 2. ENVÍO HACIA EL PC (Dominio clk 100 MHz)
+    -- 2. ENVIO HACIA EL PC (Dominio clk 100 MHz)
     -- ==========================================
     process(clk, reset)
     begin
@@ -195,10 +194,10 @@ begin
             fifo_rd_en <= '0';
             user_wren  <= '0';
 
-            -- Si hay píxeles en la FIFO, el switch está activado (antirrebote), y el módulo USB está listo
+            -- Si hay pixeles en la FIFO, el switch esta activado (antirrebote), y el modulo USB esta listo
             if fifo_empty = '0' and user_ready = '1' and sw0_stable = '1' then
-                fifo_rd_en <= '1';    -- Extraemos el píxel de la FIFO
-                user_wren  <= '1';    -- Le decimos al FT245 que lo envíe
+                fifo_rd_en <= '1';    -- Extraemos el pixel de la FIFO
+                user_wren  <= '1';    -- Le decimos al FT245 que lo envie
             end if;
         end if;
     end process;
@@ -217,10 +216,10 @@ begin
         end if;
     end process;
     
-    -- Usamos los bits superiores para seleccionar qué display está encendido
+    -- Usamos los bits superiores para seleccionar que display esta encendido
     active_digit <= std_logic_vector(refresh_cnt(19 downto 18));
     
-    -- 2. Selección del ánodo y del medio byte (nibble) del valor extraído de la FIFO
+    -- 2. Seleccion del anodo y del medio byte (nibble) del valor extraido de la FIFO
     process(active_digit, fifo_dout)
     begin
         -- Por defecto: displays apagados y valor cero
@@ -229,11 +228,11 @@ begin
         
         case active_digit is
             when "00" => 
-                AN <= "1110"; -- Activa el display 0 (el de más a la derecha)
-                hex_val <= unsigned(fifo_dout(3 downto 0)); -- Parte baja del píxel
+                AN <= "1110"; -- Activa el display 0 (el de mas a la derecha)
+                hex_val <= unsigned(fifo_dout(3 downto 0)); -- Parte baja del pixel
             when "01" => 
                 AN <= "1101"; -- Activa el display 1
-                hex_val <= unsigned(fifo_dout(7 downto 4)); -- Parte alta del píxel
+                hex_val <= unsigned(fifo_dout(7 downto 4)); -- Parte alta del pixel
             when others => 
                 AN <= "1111"; -- Los displays 2 y 3 permanecen apagados ("XX")
                 hex_val <= "0000";
@@ -243,11 +242,11 @@ begin
     -- 3. Decodificador de Hexadecimal a 7 Segmentos
     process(hex_val, active_digit)
     begin
-        -- Si estamos en un dígito inactivo (displays 2 y 3), apagamos todos los segmentos
+        -- Si estamos en un digito inactivo (displays 2 y 3), apagamos todos los segmentos
         if active_digit = "10" or active_digit = "11" then
             CAT <= "11111111"; 
         else
-            -- Lógica para los dígitos activos (Cátodo común: 0 enciende, 1 apaga)
+            -- Logica para los digitos activos (Catodo comun: 0 enciende, 1 apaga)
             -- Orden de CAT[7:0]: DP, G, F, E, D, C, B, A
             case hex_val is
                 when x"0" => CAT <= "11000000";
@@ -272,7 +271,7 @@ begin
     end process;
 
     -- ==========================================
-    -- ASIGNACIÓN DE SALIDAS DEL SISTEMA
+    -- ASIGNACION DE SALIDAS DEL SISTEMA
     -- ==========================================
     -- Enviamos directamente el bus de salida de la FIFO a la interfaz FT245
     user_din  <= fifo_dout;
@@ -285,10 +284,10 @@ begin
     LED(0)    <= FT245_TXEn;
     LED(1)    <= user_wren;
     LED(2)    <= reset;
-    LED(3)    <= fifo_empty;  -- Encendido = FIFO VACÍA (No entran píxeles)
+    LED(3)    <= fifo_empty;  -- Encendido = FIFO VACIA (No entran pixeles)
     LED(4)    <= fifo_full;   -- Encendido = FIFO LLENA
     LED(5)    <= user_ready;  -- Encendido = Interfaz FT245 lista
     LED(6)    <= cam_vsync;   -- Encendido = Sincronismo de fotograma activo
-    LED(7)    <= cam_href;    -- Encendido = Sincronismo de línea activo
+    LED(7)    <= cam_href;    -- Encendido = Sincronismo de linea activo
 
 end Behavioral;
