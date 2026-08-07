@@ -1,16 +1,16 @@
 # ==============================================================================
-# Archivo XDC - Proyecto VICON (Prueba FT245)
+# Archivo XDC - Proyecto VICON (Prueba FT245 + Cámara MT9V111)
 # ==============================================================================
 
 set_property CFGBVS VCCO [current_design]
 set_property CONFIG_VOLTAGE 3.3 [current_design]
 
-# 1. Seï¿½al de Reloj (100 MHz)
+# 1. Señal de Reloj (100 MHz)
 set_property PACKAGE_PIN W5 [get_ports clk]							
 set_property IOSTANDARD LVCMOS33 [get_ports clk]
 create_clock -add -name sys_clk_pin -period 10.00 -waveform {0 5} [get_ports clk]
 
-# 2. Reset (Botï¿½n central BTNC)
+# 2. Reset (Botón central BTNC)
 set_property PACKAGE_PIN U18 [get_ports reset]						
 set_property IOSTANDARD LVCMOS33 [get_ports reset]
 
@@ -42,12 +42,7 @@ set_property IOSTANDARD LVCMOS33 [get_ports FT245_RDn]
 set_property PACKAGE_PIN N17 [get_ports SIWU]
 set_property IOSTANDARD LVCMOS33 [get_ports SIWU]
 
-# Nota: RXF (C0, pin K17) y RD (C2, pin M18) no se declaran aï¿½n porque
-# el mï¿½dulo actual FT245_IF solo soporta transmisiï¿½n hacia el PC.
-
 ## --- LEDS ---
-## Asigna los 16 LEDs situados encima de los interruptores a los puertos LED[0] a LED[15].
-
 set_property PACKAGE_PIN U16 [get_ports {LED[0]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {LED[0]}]
 set_property PACKAGE_PIN E19 [get_ports {LED[1]}]
@@ -82,9 +77,6 @@ set_property PACKAGE_PIN L1 [get_ports {LED[15]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {LED[15]}]
 
 ## --- INTERRUPTORES (SWITCHES) ---
-## Asigna los 16 interruptores deslizantes de la placa a los puertos SW[0] a SW[15].
-## Se define la ubicaci?n f?sica (PIN) y el nivel de voltaje (LVCMOS33).
-
 set_property PACKAGE_PIN V17 [get_ports {SW[0]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {SW[0]}]
 set_property PACKAGE_PIN V16 [get_ports {SW[1]}]
@@ -118,10 +110,7 @@ set_property IOSTANDARD LVCMOS33 [get_ports {SW[14]}]
 set_property PACKAGE_PIN R2 [get_ports {SW[15]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {SW[15]}]
 
-## --- DISPLAY 7 SEGMENTOS (C?TODOS) ---
-## Controla los segmentos individuales (A, B, C, D, E, F, G y punto decimal) del display.
-## Al ser c?todo com?n, un '0' l?gico enciende el segmento.
-
+## --- DISPLAY 7 SEGMENTOS (CÁTODOS) ---
 set_property PACKAGE_PIN W7 [get_ports {CAT[0]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {CAT[0]}]
 set_property PACKAGE_PIN W6 [get_ports {CAT[1]}]
@@ -139,9 +128,7 @@ set_property IOSTANDARD LVCMOS33 [get_ports {CAT[6]}]
 set_property PACKAGE_PIN V7 [get_ports {CAT[7]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {CAT[7]}]
 
-## --- DISPLAY 7 SEGMENTOS (?NODOS) ---
-## Selecciona cu?l de los 4 d?gitos del display est? activo.
-
+## --- DISPLAY 7 SEGMENTOS (ÁNODOS) ---
 set_property PACKAGE_PIN U2 [get_ports {AN[0]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {AN[0]}]
 set_property PACKAGE_PIN U4 [get_ports {AN[1]}]
@@ -152,15 +139,15 @@ set_property PACKAGE_PIN W4 [get_ports {AN[3]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {AN[3]}]
 
 # ==============================================================================
-# 5. Interfaz con CÃ¡mara MT9V111 (PMOD JA y JXADC)
+# 5. Interfaz con Cámara MT9V111 (PMOD JA y JXADC)
 # ==============================================================================
 
-# -- SEÃ‘ALES DE CONTROL Y RELOJ (PMOD JA) --
-# JA2 - XCLK (Reloj Maestro hacia la cÃ¡mara 25MHz)
+# -- SEÑALES DE CONTROL Y RELOJ (PMOD JA) --
+# JA2 - XCLK (Reloj Maestro hacia la cámara)
 set_property PACKAGE_PIN L2 [get_ports cam_xclk]
 set_property IOSTANDARD LVCMOS33 [get_ports cam_xclk]
 
-# JA3 - HREF (Sincronismo de lÃ­nea horizontal)
+# JA3 - HREF (Sincronismo de línea horizontal)
 set_property PACKAGE_PIN J2 [get_ports cam_href]
 set_property IOSTANDARD LVCMOS33 [get_ports cam_href]
 
@@ -168,37 +155,46 @@ set_property IOSTANDARD LVCMOS33 [get_ports cam_href]
 set_property PACKAGE_PIN H2 [get_ports cam_vsync]
 set_property IOSTANDARD LVCMOS33 [get_ports cam_vsync]
 
-# JA7 - PCLK (Reloj de pÃ­xel de entrada desde la cÃ¡mara)
+# JA7 - PCLK (Reloj de píxel de entrada desde la cámara)
 set_property PACKAGE_PIN H1 [get_ports cam_pclk]
 set_property IOSTANDARD LVCMOS33 [get_ports cam_pclk]
-# IMPORTANTE: Como PCLK entra por un pin PMOD normal y no por un pin dedicado 
-# de reloj de la FPGA, Vivado darÃ¡ error de ruteo. Esta lÃ­nea obliga a Vivado 
-# a rutearlo hacia la red de relojes globales internamente.
 set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets cam_pclk_IBUF]
 
-# -- BUS DE DATOS DE PÃXELES (PMOD JXADC) --
-# JXADC1 (J3)  -> D0
-# JXADC7 (K3)  -> D1
-# JXADC2 (L3)  -> D2
-# JXADC8 (M3)  -> D3
-# JXADC3 (M2)  -> D4
-# JXADC9 (M1)  -> D5
-# JXADC4 (N2)  -> D6
-# JXADC10 (N1) -> D7
+# -- BUS DE DATOS DE PÍXELES (PMOD JXADC) --
+# J3 era D0, pero en realidad es el RESET# de la cámara
+set_property PACKAGE_PIN J3 [get_ports {cam_rst_n}]
+set_property IOSTANDARD LVCMOS33 [get_ports {cam_rst_n}]
 
-set_property PACKAGE_PIN J3 [get_ports {cam_data[0]}]
+# Re-mapeo del bus de 8 bits (corresponde a los pines D2 a D9 físicos)
+# L3 (D2), M3 (D3), M2 (D4), M1 (D5), N2 (D6), N1 (D7), J1 (D8), K2 (D9)
+set_property PACKAGE_PIN L3 [get_ports {cam_data[0]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {cam_data[0]}]
-set_property PACKAGE_PIN K3 [get_ports {cam_data[1]}]
+set_property PACKAGE_PIN M3 [get_ports {cam_data[1]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {cam_data[1]}]
-set_property PACKAGE_PIN L3 [get_ports {cam_data[2]}]
+set_property PACKAGE_PIN M2 [get_ports {cam_data[2]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {cam_data[2]}]
-set_property PACKAGE_PIN M3 [get_ports {cam_data[3]}]
+set_property PACKAGE_PIN M1 [get_ports {cam_data[3]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {cam_data[3]}]
-set_property PACKAGE_PIN M2 [get_ports {cam_data[4]}]
+set_property PACKAGE_PIN N2 [get_ports {cam_data[4]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {cam_data[4]}]
-set_property PACKAGE_PIN M1 [get_ports {cam_data[5]}]
+set_property PACKAGE_PIN N1 [get_ports {cam_data[5]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {cam_data[5]}]
-set_property PACKAGE_PIN N2 [get_ports {cam_data[6]}]
+set_property PACKAGE_PIN J1 [get_ports {cam_data[6]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {cam_data[6]}]
-set_property PACKAGE_PIN N1 [get_ports {cam_data[7]}]
+set_property PACKAGE_PIN K2 [get_ports {cam_data[7]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {cam_data[7]}]
+
+#set_property PACKAGE_PIN K3 [get_ports {cam_data[1]}]
+#set_property IOSTANDARD LVCMOS33 [get_ports {cam_data[1]}]
+#set_property PACKAGE_PIN L3 [get_ports {cam_data[2]}]
+#set_property IOSTANDARD LVCMOS33 [get_ports {cam_data[2]}]
+#set_property PACKAGE_PIN M3 [get_ports {cam_data[3]}]
+#set_property IOSTANDARD LVCMOS33 [get_ports {cam_data[3]}]
+#set_property PACKAGE_PIN M2 [get_ports {cam_data[4]}]
+#set_property IOSTANDARD LVCMOS33 [get_ports {cam_data[4]}]
+#set_property PACKAGE_PIN M1 [get_ports {cam_data[5]}]
+#set_property IOSTANDARD LVCMOS33 [get_ports {cam_data[5]}]
+#set_property PACKAGE_PIN N2 [get_ports {cam_data[6]}]
+#set_property IOSTANDARD LVCMOS33 [get_ports {cam_data[6]}]
+#set_property PACKAGE_PIN N1 [get_ports {cam_data[7]}]
+#set_property IOSTANDARD LVCMOS33 [get_ports {cam_data[7]}]
