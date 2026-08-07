@@ -77,6 +77,18 @@ architecture Behavioral of TOP_FT245_Test is
     signal refresh_cnt  : unsigned(19 downto 0) := (others => '0');
     signal active_digit : std_logic_vector(1 downto 0);
     signal hex_val      : unsigned(3 downto 0);
+
+    -- Señales para Máquina de Estados de Captura
+    type cap_state_t is (IDLE, WAIT_END_FRAME, WAIT_START_FRAME, CAPTURING, HANDSHAKE_END);
+    signal cap_state : cap_state_t := IDLE;
+    
+    -- Señales para el Handshake (Confirmación de la cámara hacia el PC)
+    signal frame_captured_25  : std_logic := '0';
+    signal sync_ack1          : std_logic := '0';
+    signal frame_captured_100 : std_logic := '0';
+    
+    -- Señal para extraer Escala de Grises (Luminancia Y)
+    signal byte_toggle        : std_logic := '0';
     
     -- ==========================================
     -- DECLARACION DE LA FIFO ASINCRONA
