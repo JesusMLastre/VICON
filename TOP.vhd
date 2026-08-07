@@ -13,8 +13,9 @@ entity TOP_FT245_Test is
         reset       : in  STD_LOGIC;
         
         -- Interfaz fisica con UM232H
-        FT245_D     : out STD_LOGIC_VECTOR (7 downto 0);
+        FT245_D     : inout STD_LOGIC_VECTOR (7 downto 0);
         FT245_TXEn  : in  STD_LOGIC;
+        FT245_RXFn  : in  STD_LOGIC;
         FT245_WRn   : out STD_LOGIC;
         FT245_RDn   : out STD_LOGIC;
         SIWU        : out STD_LOGIC;
