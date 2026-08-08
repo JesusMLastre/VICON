@@ -202,21 +202,110 @@ begin
       );
 
     -- ==========================================
-    -- DECODIFICADOR DE COMANDOS (Dominio 100 MHz)
+    -- DECODIFICADOR Y HANDSHAKE (Dominio 100 MHz)
     -- ==========================================
     process(clk, reset)
     begin
         if reset = '1' then
-            req_frame_100 <= '0';
+            req_frame_100      <= '0';
+            sync_ack1          <= '0';
+            frame_captured_100 <= '0';
         elsif rising_edge(clk) then
-            -- Si recibimos el comando 0x01 (Pedir Frame), levantamos la bandera
+            -- 1. Sincronizamos el ACK de la cámara (25 MHz -> 100 MHz)
+            sync_ack1          <= frame_captured_25;
+            frame_captured_100 <= sync_ack1;
+
+            -- 2. Máquina de Peticiones
             if cmd_valid = '1' and cmd_out = x"01" then
+                -- Si recibimos comando 0x01, levantamos petición
                 req_frame_100 <= '1';
-            -- Aquí añadiremos la condición para bajar la bandera cuando el frame se envíe
+            elsif frame_captured_100 = '1' then
+                -- Si la cámara nos confirma que ya ha terminado, bajamos la petición
+                req_frame_100 <= '0';
             end if;
         end if;
     end process;
+    
+    -- ==========================================
+    -- CAPTURA Y FSM (Dominio cam_pclk a ~25 MHz)
+    -- ==========================================
+    process(cam_pclk, reset)
+    begin
+        if reset = '1' then
+            sync_ff1          <= '0';
+            req_frame_25      <= '0';
+            cap_state         <= IDLE;
+            fifo_wr_en        <= '0';
+            fifo_din          <= (others => '0');
+            byte_toggle       <= '0';
+            frame_captured_25 <= '0';
+        elsif rising_edge(cam_pclk) then
+            -- 1. Sincronizador 2-FF de la Petición (REQ) (100 MHz -> 25 MHz)
+            sync_ff1     <= req_frame_100;
+            req_frame_25 <= sync_ff1;
 
+            -- Por defecto, no escribimos en la FIFO
+            fifo_wr_en <= '0';
+
+            -- 2. Máquina de Estados de Captura
+            case cap_state is
+                when IDLE =>
+                    frame_captured_25 <= '0';
+                    byte_toggle       <= '0';
+                    
+                    if req_frame_25 = '1' then
+                        if cam_vsync = '1' then
+                            cap_state <= WAIT_END_FRAME;   -- Ignorar frame a medias
+                        else
+                            cap_state <= WAIT_START_FRAME; -- Esperar a que empiece
+                        end if;
+                    end if;
+
+                when WAIT_END_FRAME =>
+                    -- Esperamos a que la señal de fotograma caiga a '0'
+                    if cam_vsync = '0' then
+                        cap_state <= WAIT_START_FRAME;
+                    end if;
+
+                when WAIT_START_FRAME =>
+                    -- En cuanto asoma el flanco de subida del nuevo fotograma, capturamos
+                    if cam_vsync = '1' then
+                        cap_state   <= CAPTURING;
+                        byte_toggle <= '0';
+                    end if;
+
+                when CAPTURING =>
+                    if cam_vsync = '0' then
+                        -- El fotograma ha terminado completamente
+                        cap_state <= HANDSHAKE_END;
+                    elsif cam_href = '1' then
+                        -- Alternamos el toggle en cada ciclo de píxel válido
+                        byte_toggle <= not byte_toggle;
+                        
+                        -- Extraemos la escala de grises (Descarte de Cb/Cr)
+                        -- Como VHDL evalúa el valor ANTIGUO de la señal en este ciclo:
+                        -- Reloj 1 (Dato Cb): byte_toggle evalúa a '0' -> No se graba
+                        -- Reloj 2 (Dato Y):  byte_toggle evalúa a '1' -> SÍ se graba
+                        if byte_toggle = '1' and fifo_full = '0' then
+                            fifo_wr_en <= '1';
+                            fifo_din   <= cam_data;
+                        end if;
+                    else
+                        -- Reset al terminar cada línea horizontal
+                        byte_toggle <= '0';
+                    end if;
+
+                when HANDSHAKE_END =>
+                    -- Levantamos la confirmación (ACK) para el dominio de 100 MHz
+                    frame_captured_25 <= '1';
+                    
+                    -- Esperamos pacientemente a que los 100 MHz bajen la petición
+                    if req_frame_25 = '0' then
+                        cap_state <= IDLE;
+                    end if;
+            end case;
+        end if;
+    end process;
     -- ==========================================
     -- SINCRONIZADOR 2-FF (Cruce a Dominio 25 MHz)
     -- ==========================================
