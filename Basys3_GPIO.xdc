@@ -38,6 +38,10 @@ set_property IOSTANDARD LVCMOS33 [get_ports FT245_WRn]
 set_property PACKAGE_PIN M18 [get_ports FT245_RDn]
 set_property IOSTANDARD LVCMOS33 [get_ports FT245_RDn]
 
+# C1 - RXF (Receive Full) (Entrada)
+set_property PACKAGE_PIN K17 [get_ports FT245_RXFn]					
+set_property IOSTANDARD LVCMOS33 [get_ports FT245_RXFn]
+
 # C4 - SIWU (Send Inmediate/ Wake Up) (Salida)
 set_property PACKAGE_PIN N17 [get_ports SIWU]
 set_property IOSTANDARD LVCMOS33 [get_ports SIWU]
