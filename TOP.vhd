@@ -306,42 +306,9 @@ begin
             end case;
         end if;
     end process;
-    -- ==========================================
-    -- SINCRONIZADOR 2-FF (Cruce a Dominio 25 MHz)
-    -- ==========================================
-    process(cam_pclk, reset)
-    begin
-        if reset = '1' then
-            sync_ff1     <= '0';
-            req_frame_25 <= '0';
-        elsif rising_edge(cam_pclk) then
-            -- Pasamos la señal por dos biestables en cascada para evitar metaestabilidad
-            sync_ff1     <= req_frame_100;
-            req_frame_25 <= sync_ff1;
-        end if;
-    end process;
 
     -- ==========================================
-    -- 1. CAPTURA DE LA CAMARA (Dominio cam_pclk)
-    -- ==========================================
-    process(cam_pclk, reset)
-    begin
-        if reset = '1' then
-            fifo_wr_en <= '0';
-            fifo_din   <= (others => '0');
-        elsif rising_edge(cam_pclk) then
-            -- Solo guardamos el dato si el fotograma y la linea son validos
-            if cam_vsync = '1' and cam_href = '1' and fifo_full = '0' then
-                fifo_wr_en <= '1';
-                fifo_din   <= cam_data;
-            else
-                fifo_wr_en <= '0';
-            end if;
-        end if;
-    end process;
-
-    -- ==========================================
-    -- 2. ENVIO HACIA EL PC (Dominio clk 100 MHz)
+    -- ENVIO HACIA EL PC (Dominio clk 100 MHz)
     -- ==========================================
     process(clk, reset)
     begin
