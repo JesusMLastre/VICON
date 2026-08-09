@@ -86,6 +86,10 @@ architecture Behavioral of TOP_FT245_Test is
     signal frame_captured_25  : std_logic := '0';
     signal sync_ack1          : std_logic := '0';
     signal frame_captured_100 : std_logic := '0';
+
+    -- Señal para la máquina de envío al PC
+    type tx_state_t is (WAIT_READY, WAIT_BUSY);
+    signal tx_state : tx_state_t := WAIT_READY;
     
     -- Señal para extraer Escala de Grises (Luminancia Y)
     signal byte_toggle        : std_logic := '0';
@@ -315,16 +319,28 @@ begin
         if reset = '1' then
             user_wren  <= '0';
             fifo_rd_en <= '0';
+            tx_state   <= WAIT_READY;
         elsif rising_edge(clk) then
-            -- Valores por defecto para generar pulsos de un ciclo de reloj
+            -- Valores por defecto (pulsos limpios de 1 ciclo)
             fifo_rd_en <= '0';
             user_wren  <= '0';
 
-            -- Si hay pixeles en la FIFO, el switch esta activado (antirrebote), y el modulo USB esta listo
-            if fifo_empty = '0' and user_ready = '1' and sw0_stable = '1' then
-                fifo_rd_en <= '1';    -- Extraemos el pixel de la FIFO
-                user_wren  <= '1';    -- Le decimos al FT245 que lo envie
-            end if;
+            case tx_state is
+                when WAIT_READY =>
+                    -- Disparamos UN SOLO byte si todo está listo
+                    if fifo_empty = '0' and user_ready = '1' and sw0_stable = '1' then
+                        fifo_rd_en <= '1';
+                        user_wren  <= '1';
+                        tx_state   <= WAIT_BUSY; -- Nos bloqueamos inmediatamente
+                    end if;
+                    
+                when WAIT_BUSY =>
+                    -- Esperamos pacientemente a que el módulo FT245 baje su señal "ready" 
+                    -- para confirmar que ha procesado nuestro byte y no pisarnos.
+                    if user_ready = '0' then
+                        tx_state <= WAIT_READY;
+                    end if;
+            end case;
         end if;
     end process;
 
