@@ -119,9 +119,29 @@ architecture Behavioral of TOP_FT245_Test is
     signal fifo_full  : std_logic;
     signal fifo_empty : std_logic;
 
+    -- Señales para el reloj y reset seguro de la cámara
+    signal clk_locked    : std_logic;
+    signal cam_rst_sync1 : std_logic := '0';
+    signal cam_rst_sync2 : std_logic := '0';
+
 begin
-    -- Reset activo a nivel bajo
-    cam_rst_n <= not reset;
+    -- ==========================================
+    -- SINCRONIZADOR DEL RESET DE LA CAMARA
+    -- ==========================================
+    process(clk, reset)
+    begin
+        if reset = '1' then
+            cam_rst_sync1 <= '0';
+            cam_rst_sync2 <= '0';
+        elsif rising_edge(clk) then
+            -- 'clk_locked' a 1 significa que los 25 MHz son 100% estables
+            cam_rst_sync1 <= clk_locked;
+            cam_rst_sync2 <= cam_rst_sync1;
+        end if;
+    end process;
+    
+    cam_rst_n <= cam_rst_sync2;
+    
     -- ==========================================
     -- INSTANCIA DEL RELOJ DE LA CAMARA (25 MHz)
     -- ==========================================
@@ -130,7 +150,7 @@ begin
         clk_in1  => clk,       -- Reloj base de 100 MHz de la placa
         clk_out1 => cam_xclk,  -- Salida hacia el pin XCLK de la camara
         reset    => reset,     -- Conectado al boton central BTNC
-        locked   => open
+        locked   => clk_locked
     );
 
     -- ==========================================
