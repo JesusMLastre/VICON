@@ -124,6 +124,10 @@ architecture Behavioral of TOP_FT245_Test is
     signal cam_rst_sync1 : std_logic := '0';
     signal cam_rst_sync2 : std_logic := '0';
 
+    -- Señales para FSM de Handshake a 100 MHz
+    type handshake_state_t is (WAIT_CMD, WAIT_ACK_HIGH, WAIT_ACK_LOW);
+    signal hs_state : handshake_state_t := WAIT_CMD;
+
 begin
     -- ==========================================
     -- SINCRONIZADOR DEL RESET DE LA CAMARA
@@ -141,7 +145,7 @@ begin
     end process;
     
     cam_rst_n <= cam_rst_sync2;
-    
+
     -- ==========================================
     -- INSTANCIA DEL RELOJ DE LA CAMARA (25 MHz)
     -- ==========================================
@@ -234,19 +238,36 @@ begin
             req_frame_100      <= '0';
             sync_ack1          <= '0';
             frame_captured_100 <= '0';
+            hs_state           <= WAIT_CMD;
         elsif rising_edge(clk) then
             -- 1. Sincronizamos el ACK de la cámara (25 MHz -> 100 MHz)
             sync_ack1          <= frame_captured_25;
             frame_captured_100 <= sync_ack1;
 
-            -- 2. Máquina de Peticiones
-            if cmd_valid = '1' and cmd_out = x"01" then
-                -- Si recibimos comando 0x01, levantamos petición
-                req_frame_100 <= '1';
-            elsif frame_captured_100 = '1' then
-                -- Si la cámara nos confirma que ya ha terminado, bajamos la petición
-                req_frame_100 <= '0';
-            end if;
+            -- 2. Máquina de Estados de Peticiones (FSM Handshake)
+            case hs_state is
+                when WAIT_CMD =>
+                    req_frame_100 <= '0';
+                    if cmd_valid = '1' and cmd_out = x"01" then
+                        req_frame_100 <= '1';
+                        hs_state      <= WAIT_ACK_HIGH;
+                    end if;
+
+                when WAIT_ACK_HIGH =>
+                    req_frame_100 <= '1';
+                    -- Esperamos a que la cámara capture el frame y lo reconozca
+                    if frame_captured_100 = '1' then
+                        req_frame_100 <= '0';
+                        hs_state      <= WAIT_ACK_LOW;
+                    end if;
+
+                when WAIT_ACK_LOW =>
+                    req_frame_100 <= '0';
+                    -- Evitamos nuevas peticiones hasta que la señal caiga limpiamente
+                    if frame_captured_100 = '0' then
+                        hs_state <= WAIT_CMD;
+                    end if;
+            end case;
         end if;
     end process;
     
