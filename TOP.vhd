@@ -73,11 +73,6 @@ architecture Behavioral of TOP_FT245_Test is
     signal sync_ff1     : std_logic := '0';
     signal req_frame_25 : std_logic := '0';
 
-    -- Señales para el control del Display de 7 Segmentos
-    signal refresh_cnt  : unsigned(19 downto 0) := (others => '0');
-    signal active_digit : std_logic_vector(1 downto 0);
-    signal hex_val      : unsigned(3 downto 0);
-
     -- Señales para Máquina de Estados de Captura
     type cap_state_t is (IDLE, WAIT_END_FRAME, WAIT_START_FRAME, CAPTURING, HANDSHAKE_END);
     signal cap_state : cap_state_t := IDLE;
@@ -381,74 +376,6 @@ begin
                     if user_ready = '0' then
                         tx_state <= WAIT_READY;
                     end if;
-            end case;
-        end if;
-    end process;
-
-    -- ==========================================
-    -- CONTROL MULTIPLEXADO: DISPLAY 7 SEGMENTOS
-    -- ==========================================
-    
-    -- 1. Contador para la frecuencia de refresco (~380 Hz)
-    process(clk, reset)
-    begin
-        if reset = '1' then
-            refresh_cnt <= (others => '0');
-        elsif rising_edge(clk) then
-            refresh_cnt <= refresh_cnt + 1;
-        end if;
-    end process;
-    
-    -- Usamos los bits superiores para seleccionar que display esta encendido
-    active_digit <= std_logic_vector(refresh_cnt(19 downto 18));
-    
-    -- 2. Seleccion del anodo y del medio byte (nibble) del valor extraido de la FIFO
-    process(active_digit, fifo_dout)
-    begin
-        -- Por defecto: displays apagados y valor cero
-        AN <= "1111";
-        hex_val <= "0000";
-        
-        case active_digit is
-            when "00" => 
-                AN <= "1110"; -- Activa el display 0 (el de mas a la derecha)
-                hex_val <= unsigned(fifo_dout(3 downto 0)); -- Parte baja del pixel
-            when "01" => 
-                AN <= "1101"; -- Activa el display 1
-                hex_val <= unsigned(fifo_dout(7 downto 4)); -- Parte alta del pixel
-            when others => 
-                AN <= "1111"; -- Los displays 2 y 3 permanecen apagados ("XX")
-                hex_val <= "0000";
-        end case;
-    end process;
-
-    -- 3. Decodificador de Hexadecimal a 7 Segmentos
-    process(hex_val, active_digit)
-    begin
-        -- Si estamos en un digito inactivo (displays 2 y 3), apagamos todos los segmentos
-        if active_digit = "10" or active_digit = "11" then
-            CAT <= "11111111"; 
-        else
-            -- Logica para los digitos activos (Catodo comun: 0 enciende, 1 apaga)
-            -- Orden de CAT[7:0]: DP, G, F, E, D, C, B, A
-            case hex_val is
-                when x"0" => CAT <= "11000000";
-                when x"1" => CAT <= "11111001";
-                when x"2" => CAT <= "10100100";
-                when x"3" => CAT <= "10110000";
-                when x"4" => CAT <= "10011001";
-                when x"5" => CAT <= "10010010";
-                when x"6" => CAT <= "10000010";
-                when x"7" => CAT <= "11111000";
-                when x"8" => CAT <= "10000000";
-                when x"9" => CAT <= "10010000";
-                when x"A" => CAT <= "10001000";
-                when x"B" => CAT <= "10000011";
-                when x"C" => CAT <= "11000110";
-                when x"D" => CAT <= "10100001";
-                when x"E" => CAT <= "10000110";
-                when x"F" => CAT <= "10001110";
-                when others => CAT <= "11111111";
             end case;
         end if;
     end process;
