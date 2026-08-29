@@ -95,8 +95,8 @@ begin
                     RDn_next   <= '0'; -- Bajamos RD# para iniciar la lectura
                 end if;
             
-            -- Los estados read_1, 2, 3 y 4 mantienen RD# a '0' durante 40ns
-            -- Asegurando cumplir el requisito T4 (minimo 30ns) de los apuntes
+            -- Los estados read_1, 2 y 3 mantienen RD# a '0' durante 30ns
+            -- Asegurando cumplir el requisito T4 (minimo 30ns)
             when read_1 =>
                 state_next <= read_2;
             
