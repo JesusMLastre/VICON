@@ -63,9 +63,9 @@ architecture Behavioral of TOP_FT245_Test is
     signal cmd_valid    : std_logic;
 
     -- Señales para el Antirrebote (Debouncer)
-    signal sw0_sync_1   : std_logic := '0';
-    signal sw0_sync_2   : std_logic := '0';
-    signal sw0_stable   : std_logic := '0';
+    signal reset_sync_1   : std_logic := '0';
+    signal reset_sync_2   : std_logic := '0';
+    signal reset_stable   : std_logic := '0';
     signal debounce_cnt : unsigned(20 downto 0) := (others => '0');
 
     -- Señales para el sincronizador 2-FF
@@ -127,9 +127,9 @@ begin
     -- ==========================================
     -- SINCRONIZADOR DEL RESET DE LA CAMARA
     -- ==========================================
-    process(clk, reset)
+    process(clk, reset_stable)
     begin
-        if reset = '1' then
+        if reset_stable = '1' then
             cam_rst_sync1 <= '0';
             cam_rst_sync2 <= '0';
         elsif rising_edge(clk) then
@@ -148,7 +148,7 @@ begin
     port map (
         clk_in1  => clk,       -- Reloj base de 100 MHz de la placa
         clk_out1 => cam_xclk,  -- Salida hacia el pin XCLK de la camara
-        reset    => reset,     -- Conectado al boton central BTNC
+        reset    => reset_stable,     -- Conectado al boton central BTNC
         locked   => clk_locked
     );
 
@@ -158,7 +158,7 @@ begin
     FT245_inst: entity work.FT245_WR
         port map (
             clk     => clk,
-            reset   => reset,
+            reset   => reset_stable,
             DIN     => user_din,
             wr_en   => user_wren,
             ready   => user_ready,
@@ -173,7 +173,7 @@ begin
     FT245_RX_inst: entity work.FT245_RD
         port map (
             clk       => clk,
-            reset     => reset,
+            reset     => reset_stable,
             cmd_out   => cmd_out,
             cmd_valid => cmd_valid,
             RXFn      => FT245_RXFn,
@@ -182,26 +182,21 @@ begin
         );
 
     -- ==========================================
-    -- BLOQUE ANTIRREBOTE PARA SW(0)
+    -- BLOQUE ANTIRREBOTE PARA RESET
     -- ==========================================
-    process(clk, reset)
+    process(clk)
     begin
-        if reset = '1' then
-            sw0_sync_1   <= '0';
-            sw0_sync_2   <= '0';
-            sw0_stable   <= '0';
-            debounce_cnt <= (others => '0');
-        elsif rising_edge(clk) then
-            sw0_sync_1 <= SW(0);
-            sw0_sync_2 <= sw0_sync_1;
+        if rising_edge(clk) then
+            reset_sync_1 <= reset;
+            reset_sync_2 <= reset_sync_1;
 
-            if sw0_sync_2 = sw0_stable then
+            if reset_sync_2 = reset_stable then
                 debounce_cnt <= (others => '0');
             else
                 debounce_cnt <= debounce_cnt + 1;
-                -- Estabilidad de 20 ms a 100 MHz
-                if debounce_cnt = 20 then
-                    sw0_stable <= sw0_sync_2;
+                -- 2.000.000 ciclos a 100 MHz = 20 milisegundos
+                if debounce_cnt = 2000000 then
+                    reset_stable <= reset_sync_2;
                     debounce_cnt <= (others => '0');
                 end if;
             end if;
@@ -213,7 +208,7 @@ begin
     -- ==========================================
     Inst_fifo_cam: fifo_cam
       PORT MAP (
-        rst    => reset,
+        rst    => reset_stable,
         wr_clk => cam_pclk,   -- Reloj de escritura: el que envia la camara
         rd_clk => clk,        -- Reloj de lectura: 100 MHz de la FPGA
         din    => fifo_din,
@@ -227,9 +222,9 @@ begin
     -- ==========================================
     -- DECODIFICADOR Y HANDSHAKE (Dominio 100 MHz)
     -- ==========================================
-    process(clk, reset)
+    process(clk, reset_stable)
     begin
-        if reset = '1' then
+        if reset_stable = '1' then
             req_frame_100      <= '0';
             sync_ack1          <= '0';
             frame_captured_100 <= '0';
@@ -269,9 +264,9 @@ begin
     -- ==========================================
     -- CAPTURA Y FSM (Dominio cam_pclk a ~25 MHz)
     -- ==========================================
-    process(cam_pclk, reset)
+    process(cam_pclk, reset_stable)
     begin
-        if reset = '1' then
+        if reset_stable = '1' then
             sync_ff1          <= '0';
             req_frame_25      <= '0';
             cap_state         <= IDLE;
@@ -350,9 +345,9 @@ begin
     -- ==========================================
     -- ENVIO HACIA EL PC (Dominio clk 100 MHz)
     -- ==========================================
-    process(clk, reset)
+    process(clk, reset_stable)
     begin
-        if reset = '1' then
+        if reset_stable = '1' then
             user_wren  <= '0';
             fifo_rd_en <= '0';
             tx_state   <= WAIT_READY;
@@ -364,7 +359,7 @@ begin
             case tx_state is
                 when WAIT_READY =>
                     -- Disparamos UN SOLO byte si todo está listo
-                    if fifo_empty = '0' and user_ready = '1' and sw0_stable = '1' then
+                    if fifo_empty = '0' and user_ready = '1' then
                         fifo_rd_en <= '1';
                         user_wren  <= '1';
                         tx_state   <= WAIT_BUSY; -- Nos bloqueamos inmediatamente
@@ -393,7 +388,7 @@ begin
     
     LED(0)    <= FT245_TXEn;
     LED(1)    <= user_wren;
-    LED(2)    <= reset;
+    LED(2)    <= reset_stable;
     LED(3)    <= fifo_empty;  -- Encendido = FIFO VACIA (No entran pixeles)
     LED(4)    <= fifo_full;   -- Encendido = FIFO LLENA
     LED(5)    <= user_ready;  -- Encendido = Interfaz FT245 lista
