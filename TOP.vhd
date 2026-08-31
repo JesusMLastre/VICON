@@ -306,7 +306,6 @@ begin
                     -- En cuanto asoma el flanco de subida del nuevo fotograma, capturamos
                     if cam_vsync = '1' then
                         cap_state   <= CAPTURING;
-                        byte_toggle <= '0';
                     end if;
 
                 when CAPTURING =>
