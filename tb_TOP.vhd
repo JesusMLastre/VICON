@@ -9,7 +9,7 @@ end tb_TOP;
 architecture behavior of tb_TOP is
 
     -- Declaración del componente a probar (UUT)
-    component TOP_FT245_Test
+    component TOP_FT245
     Port ( 
         clk         : in  STD_LOGIC;
         reset       : in  STD_LOGIC;
@@ -57,7 +57,7 @@ architecture behavior of tb_TOP is
 begin
 
     -- Instanciación del módulo
-    uut: TOP_FT245_Test PORT MAP (
+    uut: TOP_FT245 PORT MAP (
         clk => clk, reset => reset,
         FT245_D => FT245_D, FT245_TXEn => FT245_TXEn, FT245_WRn => FT245_WRn,
         FT245_RDn => FT245_RDn, SIWU => SIWU,
@@ -98,7 +98,7 @@ begin
         FT245_TXEn <= '0';
         wait for 200 ns;
 
-        -- 4. SIMULACIÓN DE LA C�?MARA MT9V111
+        -- 4. SIMULACIÓN DE LA C�?MARA MT9V111
         cam_vsync <= '1'; -- Inicia fotograma
         wait for pclk_period * 3;
         

@@ -1,5 +1,5 @@
 # ==============================================================================
-# SCRIPT DE SIMULACIÓN - TOP_FT245_Test (Modo Ráfaga)
+# SCRIPT DE SIMULACIÓN - TOP_FT245 (Modo Ráfaga)
 # Autor: Francisco Jesús Martín Lastre
 # ==============================================================================
 
@@ -15,9 +15,9 @@ add_wave -color magenta FT245_WRn
 add_wave -color orange -radix hex FT245_D
 
 # Señales internas útiles para ver el comportamiento
-add_wave -color cyan /TOP_FT245_Test/user_ready
-add_wave -color yellow -radix hex /TOP_FT245_Test/counter
-add_wave -color pink /TOP_FT245_Test/FT245_inst/state_reg
+add_wave -color cyan /TOP_FT245/user_ready
+add_wave -color yellow -radix hex /TOP_FT245/counter
+add_wave -color pink /TOP_FT245/FT245_inst/state_reg
 add_wave user_wren
 
 # Reloj 100 MHz (Periodo 10ns: sube en 0, 10, 20... baja en 5, 15, 25...)
