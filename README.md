@@ -8,7 +8,7 @@ To explore the C++/Qt desktop application that receives and processes this video
 
 ## Physical Architecture
 
-![Arquitectura Física del Sistema](docs/arquitectura_fisica.png)
+![Arquitectura Física del Sistema](docs/Diagramas_TFM-Diagrama-bloques_v2.png)
 *Figure 1: VICON Physical Architecture Block Diagram*
 
 The system architecture is strictly modular, dividing the physical capture from the software processing. The hardware pipeline consists of the following blocks:
