@@ -50,43 +50,43 @@ architecture Behavioral of TOP_FT245 is
     );
     end component;
 
-    -- Se�ales internas para interactuar con el FT245_WR
+    -- senales internas para interactuar con el FT245_WR
     signal user_ready   : std_logic;
     signal user_wren    : std_logic;
     signal user_din     : std_logic_vector(7 downto 0);
     signal internal_WRn : std_logic;
     signal internal_DATA: std_logic_vector(7 downto 0);
 
-    -- Se�ales internas para interactuar con el FT245_RD
+    -- senales internas para interactuar con el FT245_RD
     signal internal_RDn : std_logic;
     signal cmd_out      : std_logic_vector(7 downto 0);
     signal cmd_valid    : std_logic;
 
-    -- Se�ales para el Antirrebote (Debouncer)
+    -- senales para el Antirrebote (Debouncer)
     signal reset_sync_1   : std_logic := '0';
     signal reset_sync_2   : std_logic := '0';
     signal reset_stable   : std_logic := '0';
     signal debounce_cnt : unsigned(20 downto 0) := (others => '0');
 
-    -- Se�ales para el sincronizador 2-FF
+    -- senales para el sincronizador 2-FF
     signal req_frame_100: std_logic := '0';
     signal sync_ff1     : std_logic := '0';
     signal req_frame_25 : std_logic := '0';
 
-    -- Se�ales para M�quina de Estados de Captura
+    -- senales para Maquina de Estados de Captura
     type cap_state_t is (IDLE, WAIT_END_FRAME, WAIT_START_FRAME, CAPTURING, HANDSHAKE_END);
     signal cap_state : cap_state_t := IDLE;
     
-    -- Se�ales para el Handshake (Confirmaci�n de la c�mara hacia el PC)
+    -- senales para el Handshake (Confirmacion de la camara hacia el PC)
     signal frame_captured_25  : std_logic := '0';
     signal sync_ack1          : std_logic := '0';
     signal frame_captured_100 : std_logic := '0';
 
-    -- Se�al para la m�quina de env�o al PC
+    -- senal para la maquina de envio al PC
     type tx_state_t is (WAIT_READY, WAIT_BUSY);
     signal tx_state : tx_state_t := WAIT_READY;
     
-    -- Se�al para extraer Escala de Grises (Luminancia Y)
+    -- senal para extraer Escala de Grises (Luminancia Y)
     signal byte_toggle        : std_logic := '0';
     
     -- ==========================================
@@ -106,7 +106,7 @@ architecture Behavioral of TOP_FT245 is
         );
     end component;
 
-    -- Se�ales de la FIFO
+    -- senales de la FIFO
     signal fifo_din   : std_logic_vector(7 downto 0);
     signal fifo_wr_en : std_logic;
     signal fifo_rd_en : std_logic;
@@ -114,12 +114,12 @@ architecture Behavioral of TOP_FT245 is
     signal fifo_full  : std_logic;
     signal fifo_empty : std_logic;
 
-    -- Se�ales para el reloj y reset seguro de la c�mara
+    -- senales para el reloj y reset seguro de la camara
     signal clk_locked    : std_logic;
     signal cam_rst_sync1 : std_logic := '0';
     signal cam_rst_sync2 : std_logic := '0';
 
-    -- Se�ales para FSM de Handshake a 100 MHz
+    -- senales para FSM de Handshake a 100 MHz
     type handshake_state_t is (WAIT_CMD, WAIT_ACK_HIGH, WAIT_ACK_LOW);
     signal hs_state : handshake_state_t := WAIT_CMD;
 
@@ -146,8 +146,8 @@ begin
     -- ==========================================
     Inst_clk_wiz_camera: clk_wiz_0
     port map (
-        clk_in1  => clk,       -- Reloj base de 100 MHz de la placa
-        clk_out1 => cam_xclk,  -- Salida hacia el pin XCLK de la camara
+        clk_in1  => clk,              -- Reloj base de 100 MHz de la placa
+        clk_out1 => cam_xclk,         -- Salida hacia el pin XCLK de la camara
         reset    => reset_stable,     -- Conectado al boton central BTNC
         locked   => clk_locked
     );
@@ -186,7 +186,6 @@ begin
     -- ==========================================
     process(clk)
     begin
-        -- Eliminamos el reset as�ncrono. Todo depende del reloj.
         if rising_edge(clk) then
             reset_sync_1 <= reset;
             reset_sync_2 <= reset_sync_1;
@@ -231,11 +230,11 @@ begin
             frame_captured_100 <= '0';
             hs_state           <= WAIT_CMD;
         elsif rising_edge(clk) then
-            -- 1. Sincronizamos el ACK de la c�mara (25 MHz -> 100 MHz)
+            -- 1. Sincronizamos el ACK de la camara (25 MHz -> 100 MHz)
             sync_ack1          <= frame_captured_25;
             frame_captured_100 <= sync_ack1;
 
-            -- 2. M�quina de Estados de Peticiones (FSM Handshake)
+            -- 2. Maquina de Estados de Peticiones (FSM Handshake)
             case hs_state is
                 when WAIT_CMD =>
                     req_frame_100 <= '0';
@@ -246,7 +245,7 @@ begin
 
                 when WAIT_ACK_HIGH =>
                     req_frame_100 <= '1';
-                    -- Esperamos a que la c�mara capture el frame y lo reconozca
+                    -- Esperamos a que la camara capture el frame y lo reconozca
                     if frame_captured_100 = '1' then
                         req_frame_100 <= '0';
                         hs_state      <= WAIT_ACK_LOW;
@@ -254,7 +253,7 @@ begin
 
                 when WAIT_ACK_LOW =>
                     req_frame_100 <= '0';
-                    -- Evitamos nuevas peticiones hasta que la se�al caiga limpiamente
+                    -- Evitamos nuevas peticiones hasta que la senal caiga limpiamente
                     if frame_captured_100 = '0' then
                         hs_state <= WAIT_CMD;
                     end if;
@@ -276,14 +275,14 @@ begin
             byte_toggle       <= '0';
             frame_captured_25 <= '0';
         elsif rising_edge(cam_pclk) then
-            -- 1. Sincronizador 2-FF de la Petici�n (REQ) (100 MHz -> 25 MHz)
+            -- 1. Sincronizador 2-FF de la Peticion (REQ) (100 MHz -> 25 MHz)
             sync_ff1     <= req_frame_100;
             req_frame_25 <= sync_ff1;
 
             -- Por defecto, no escribimos en la FIFO
             fifo_wr_en <= '0';
 
-            -- 2. M�quina de Estados de Captura
+            -- 2. Maquina de Estados de Captura
             case cap_state is
                 when IDLE =>
                     frame_captured_25 <= '0';
@@ -298,7 +297,7 @@ begin
                     end if;
 
                 when WAIT_END_FRAME =>
-                    -- Esperamos a que la se�al de fotograma caiga a '0'
+                    -- Esperamos a que la senal de fotograma caiga a '0'
                     if cam_vsync = '0' then
                         cap_state <= WAIT_START_FRAME;
                     end if;
@@ -315,27 +314,27 @@ begin
                         -- El fotograma ha terminado completamente
                         cap_state <= HANDSHAKE_END;
                     elsif cam_href = '1' then
-                        -- Alternamos el toggle en cada ciclo de p�xel v�lido
+                        -- Alternamos el toggle en cada ciclo de pixel valido
                         byte_toggle <= not byte_toggle;
                         
                         -- Extraemos la escala de grises (Descarte de Cb/Cr)
-                        -- Como VHDL eval�a el valor ANTIGUO de la se�al en este ciclo:
-                        -- Reloj 1 (Dato Cb): byte_toggle eval�a a '0' -> No se graba
-                        -- Reloj 2 (Dato Y):  byte_toggle eval�a a '1' -> S� se graba
+                        -- Como VHDL evalua el valor ANTIGUO de la senal en este ciclo:
+                        -- Reloj 1 (Dato Cb): byte_toggle evalua a '0' -> No se graba
+                        -- Reloj 2 (Dato Y):  byte_toggle evalua a '1' -> Si se graba
                         if byte_toggle = '1' and fifo_full = '0' then
                             fifo_wr_en <= '1';
                             fifo_din   <= cam_data;
                         end if;
                     else
-                        -- Reset al terminar cada l�nea horizontal
+                        -- Reset al terminar cada linea horizontal
                         byte_toggle <= '0';
                     end if;
 
                 when HANDSHAKE_END =>
-                    -- Levantamos la confirmaci�n (ACK) para el dominio de 100 MHz
+                    -- Levantamos la confirmacion (ACK) para el dominio de 100 MHz
                     frame_captured_25 <= '1';
                     
-                    -- Esperamos pacientemente a que los 100 MHz bajen la petici�n
+                    -- Esperamos pacientemente a que los 100 MHz bajen la peticion
                     if req_frame_25 = '0' then
                         cap_state <= IDLE;
                     end if;
@@ -359,7 +358,7 @@ begin
 
             case tx_state is
                 when WAIT_READY =>
-                    -- Disparamos UN SOLO byte si todo est� listo
+                    -- Disparamos UN SOLO byte si todo esta listo
                     if fifo_empty = '0' and user_ready = '1' then
                         fifo_rd_en <= '1';
                         user_wren  <= '1';
@@ -367,8 +366,8 @@ begin
                     end if;
                     
                 when WAIT_BUSY =>
-                    -- Esperamos pacientemente a que el m�dulo FT245 baje su se�al "ready" 
-                    -- para confirmar que ha procesado nuestro byte y no pisarnos.
+                    -- Esperamos pacientemente a que el modulo FT245 baje su senal "ready" 
+                    -- para confirmar que ha procesado nuestro byte.
                     if user_ready = '0' then
                         tx_state <= WAIT_READY;
                     end if;
